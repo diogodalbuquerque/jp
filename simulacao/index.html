@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>João Pessoa Inteligente — simulação da matriz de serviços</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --ink: #0b1f2a;
+      --ink-soft: #243b48;
+      --paper: #f3f7f8;
+      --panel: rgba(247, 251, 252, 0.94);
+      --line: rgba(11, 31, 42, 0.12);
+      --sea: #0e7490;
+      --sea-deep: #155e75;
+      --lagoon: #14b8a6;
+      --alert: #c2410c;
+      --muted: #5b7380;
+      --shadow: 0 18px 50px rgba(11, 31, 42, 0.16);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: "Sora", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(20, 184, 166, 0.18), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(14, 116, 144, 0.16), transparent 50%),
+        linear-gradient(180deg, #e7f2f4 0%, var(--paper) 40%, #eef4f5 100%);
+    }
+
+    body {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100%;
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1rem 1.5rem;
+      align-items: end;
+      padding: 1.1rem 1.4rem 1rem;
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+      background: rgba(243, 247, 248, 0.78);
+    }
+
+    .brand-kicker {
+      margin: 0 0 0.25rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sea-deep);
+      font-weight: 600;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.55rem, 2.4vw, 2.15rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      margin: 0.45rem 0 0;
+      max-width: 46rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      align-items: center;
+      justify-content: flex-end;
+      max-width: 34rem;
+    }
+
+    .controls span {
+      width: 100%;
+      text-align: right;
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink-soft);
+      border-radius: 999px;
+      padding: 0.5rem 0.85rem;
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .chip:hover { border-color: var(--sea); color: var(--sea-deep); }
+    .chip.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: #f5fbfc;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(300px, 380px) 1fr;
+      min-height: 0;
+    }
+
+    aside {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      padding: 1rem;
+      border-right: 1px solid var(--line);
+      overflow: auto;
+      background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.2));
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 1rem 1rem 0.85rem;
+    }
+
+    .panel h2 {
+      margin: 0 0 0.35rem;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.15rem;
+      letter-spacing: -0.01em;
+    }
+
+    .panel .hint {
+      margin: 0 0 0.85rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    .disclaimer {
+      font-size: 0.75rem;
+      line-height: 1.45;
+      color: #7a4a12;
+      background: #fff7e8;
+      border: 1px solid #f0d7a2;
+      border-radius: 14px;
+      padding: 0.75rem 0.85rem;
+    }
+
+    .disclaimer b { color: #5c3a0e; }
+
+    .matrix {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .matrix-row {
+      display: grid;
+      grid-template-columns: 1.25fr 0.7fr 0.7fr 0.7fr;
+      gap: 0.35rem;
+      align-items: center;
+      font-size: 0.74rem;
+    }
+
+    .matrix-row.head {
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 0.62rem;
+    }
+
+    .matrix-row strong { font-size: 0.8rem; line-height: 1.2; }
+
+    .bar {
+      height: 7px;
+      border-radius: 999px;
+      background: #d7e4e8;
+      overflow: hidden;
+      margin-bottom: 0.15rem;
+    }
+
+    .bar > i {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--sea), var(--lagoon));
+    }
+
+    .bar.prio > i {
+      background: linear-gradient(90deg, #ea580c, #f59e0b);
+    }
+
+    .selected-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: baseline;
+      margin-bottom: 0.75rem;
+    }
+
+    .selected-title h2 { margin: 0; font-size: 1.2rem; }
+
+    .badge {
+      flex: none;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: white;
+      background: var(--alert);
+      border-radius: 999px;
+      padding: 0.35rem 0.65rem;
+      white-space: nowrap;
+      max-width: 11rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge.city {
+      background: var(--sea-deep);
+    }
+
+    .clear-sel {
+      display: none;
+      margin: 0 0 0.65rem;
+      border: 0;
+      background: transparent;
+      color: var(--sea-deep);
+      font: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .clear-sel.visible { display: inline-block; }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+      margin: 0.85rem 0 0.2rem;
+    }
+
+    .meta div {
+      background: rgba(14, 116, 144, 0.06);
+      border-radius: 12px;
+      padding: 0.55rem 0.65rem;
+    }
+
+    .meta span {
+      display: block;
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .meta b {
+      display: block;
+      margin-top: 0.15rem;
+      font-size: 0.9rem;
+    }
+
+    .rank-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.35rem;
+      max-height: 38vh;
+      overflow: auto;
+    }
+
+    .rank-list button {
+      width: 100%;
+      text-align: left;
+      border: 1px solid transparent;
+      background: rgba(255,255,255,0.7);
+      border-radius: 12px;
+      padding: 0.55rem 0.65rem;
+      cursor: pointer;
+      font: inherit;
+      display: grid;
+      grid-template-columns: 1.6rem 1fr auto;
+      gap: 0.45rem;
+      align-items: center;
+      transition: 0.15s ease;
+    }
+
+    .rank-list button:hover,
+    .rank-list button.active {
+      border-color: rgba(14, 116, 144, 0.35);
+      background: white;
+    }
+
+    .rank-list .n {
+      font-weight: 700;
+      color: var(--sea-deep);
+      font-size: 0.8rem;
+    }
+
+    .rank-list .name {
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .rank-list .sub {
+      display: block;
+      font-size: 0.68rem;
+      color: var(--muted);
+      font-weight: 500;
+      margin-top: 0.1rem;
+    }
+
+    .rank-list .score {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--alert);
+    }
+
+    #map {
+      min-height: 520px;
+      height: 100%;
+      background: #c9dde4;
+      position: relative;
+    }
+
+    .legend {
+      position: absolute;
+      z-index: 500;
+      right: 1rem;
+      bottom: 1rem;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.7rem 0.85rem;
+      box-shadow: var(--shadow);
+      font-size: 0.75rem;
+      min-width: 150px;
+    }
+
+    .legend strong {
+      display: block;
+      margin-bottom: 0.45rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    .legend-item {
+      display: grid;
+      grid-template-columns: 1.1rem 1fr;
+      gap: 0.45rem;
+      align-items: center;
+      margin: 0.25rem 0;
+    }
+
+    .swatch {
+      width: 1.1rem;
+      height: 0.7rem;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .leaflet-tooltip.bairro-tip {
+      background: var(--ink);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.35rem 0.55rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      box-shadow: none;
+    }
+    .leaflet-tooltip.bairro-tip::before { border-top-color: var(--ink); }
+
+    @media (max-width: 980px) {
+      header { grid-template-columns: 1fr; }
+      .controls { justify-content: flex-start; max-width: none; }
+      .controls span { text-align: left; }
+      .layout { grid-template-columns: 1fr; grid-template-rows: minmax(280px, 42vh) auto; }
+      aside {
+        border-right: 0;
+        border-top: 1px solid var(--line);
+        order: 2;
+      }
+      #map { order: 1; min-height: 42vh; }
+      .rank-list { max-height: 240px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <p class="brand-kicker">Simulação · Filipeia + Censo 2022</p>
+      <h1>João Pessoa Inteligente</h1>
+      <p>
+        Matriz de serviços por bairro: importância × cobertura × qualidade.
+        Mostra <em>qual serviço</em> priorizar em cada território — não só qual bairro está carente.
+      </p>
+    </div>
+    <div class="controls" role="group" aria-label="Camada do mapa">
+      <span>Camada</span>
+      <button class="chip active" data-layer="pri_geral" type="button">Geral</button>
+      <button class="chip" data-layer="pri_edu" type="button">Educação</button>
+      <button class="chip" data-layer="pri_saude" type="button">Saúde</button>
+      <button class="chip" data-layer="pri_assist" type="button">Assistência</button>
+      <button class="chip" data-layer="pri_seg" type="button">Segurança</button>
+      <button class="chip" data-layer="pri_ilum" type="button">Iluminação</button>
+      <button class="chip" data-layer="pri_calc" type="button">Calçamento</button>
+      <button class="chip" data-layer="pri_sane" type="button">Saneamento</button>
+      <button class="chip" data-layer="pri_lazer" type="button">Lazer</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div class="disclaimer">
+        <b>População:</b> IBGE Censo 2022 (oficial).
+        <b>Escolas:</b> INEP sobre malha Filipeia.
+        <b>Praças/parques:</b> Filipeia.
+        Segurança, iluminação, calçamento, saneamento, saúde, assistência, qualidade e filas são <b>estimativas ilustrativas</b> para demonstrar a matriz — não são dados oficiais da PMJP.
+      </div>
+
+      <section class="panel" id="selected-panel">
+        <div class="selected-title">
+          <h2 id="sel-name">João Pessoa</h2>
+          <span class="badge city" id="sel-badge">Visão da cidade</span>
+        </div>
+        <button type="button" class="clear-sel" id="clear-sel">← Voltar à visão da cidade</button>
+        <p class="hint" id="sel-hint">
+          Agregado dos 64 bairros. Clique em um bairro para detalhar.
+        </p>
+        <div class="matrix" id="matrix">
+          <div class="matrix-row head">
+            <span>Serviço</span><span>Cobertura</span><span>Qualidade</span><span>Prioridade</span>
+          </div>
+          <div class="matrix-row" id="row-edu"></div>
+          <div class="matrix-row" id="row-saude"></div>
+          <div class="matrix-row" id="row-assist"></div>
+          <div class="matrix-row" id="row-seg"></div>
+          <div class="matrix-row" id="row-ilum"></div>
+          <div class="matrix-row" id="row-calc"></div>
+          <div class="matrix-row" id="row-sane"></div>
+          <div class="matrix-row" id="row-lazer"></div>
+        </div>
+        <div class="meta" id="sel-meta">
+          <div><span>Pop. Censo 2022</span><b id="m-pop">—</b></div>
+          <div><span>Densidade</span><b id="m-dens">—</b></div>
+          <div><span>Escolas municipais</span><b id="m-esc">—</b></div>
+          <div><span>Praças/parques</span><b id="m-lazer">—</b></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Onde agir primeiro</h2>
+        <p class="hint">Ranking da camada ativa. Maior escore = maior carência relativa do serviço.</p>
+        <ol class="rank-list" id="rank-list"></ol>
+      </section>
+    </aside>
+
+    <div id="map" aria-label="Mapa dos bairros de João Pessoa"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="./data.js"></script>
+  <script>
+    const LAYERS = {
+      pri_geral: { label: "Prioridade geral" },
+      pri_edu: { label: "Educação infantil" },
+      pri_saude: { label: "Saúde (APS)" },
+      pri_assist: { label: "Assistência social" },
+      pri_seg: { label: "Segurança" },
+      pri_ilum: { label: "Iluminação" },
+      pri_calc: { label: "Calçamento" },
+      pri_sane: { label: "Saneamento básico" },
+      pri_lazer: { label: "Praças e lazer" },
+    };
+
+    const SERVICE_ROWS = [
+      ["edu", "Educação infantil"],
+      ["saude", "Saúde (APS)"],
+      ["assist", "Assistência social"],
+      ["seg", "Segurança"],
+      ["ilum", "Iluminação"],
+      ["calc", "Calçamento"],
+      ["sane", "Saneamento básico"],
+      ["lazer", "Praças e lazer"],
+    ];
+
+    let activeLayer = "pri_geral";
+    let selectedNome = null;
+    let geoLayer = null;
+
+    const map = L.map("map", { zoomControl: true }).setView([-7.12, -34.86], 12);
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      attribution: "&copy; OpenStreetMap &copy; CARTO · Filipeia/PMJP · IBGE Censo 2022",
+      subdomains: "abcd",
+      maxZoom: 19,
+    }).addTo(map);
+
+    function colorScale(v) {
+      if (v == null) return "#cbd5d8";
+      if (v < 25) return "#99f6e4";
+      if (v < 40) return "#5eead4";
+      if (v < 55) return "#fbbf24";
+      if (v < 70) return "#fb923c";
+      return "#ea580c";
+    }
+
+    function fmt(n) {
+      return n == null ? "—" : Number(n).toLocaleString("pt-BR");
+    }
+
+    function round1(n) {
+      return Math.round(n * 10) / 10;
+    }
+
+    function titleCase(s) {
+      return s.toLowerCase().replace(/(^|\s)\S/g, (t) => t.toUpperCase());
+    }
+
+    function matrixCell(label, cob, qual, pri) {
+      return `
+        <strong>${label}</strong>
+        <div><div class="bar"><i style="width:${cob}%"></i></div><div>${cob}</div></div>
+        <div><div class="bar"><i style="width:${qual}%"></i></div><div>${qual}</div></div>
+        <div><div class="bar prio"><i style="width:${pri}%"></i></div><div>${pri}</div></div>
+      `;
+    }
+
+    function weightedMean(rows, key, weightKey) {
+      let num = 0;
+      let den = 0;
+      rows.forEach((r) => {
+        const w = r[weightKey] || 0;
+        num += (r[key] || 0) * w;
+        den += w;
+      });
+      return den ? num / den : 0;
+    }
+
+    function buildCityAggregate() {
+      const rows = window.BAIRROS_MATRIZ.features.map((f) => f.properties);
+      const pop = rows.reduce((s, r) => s + r.pop_censo2022, 0);
+      const area = rows.reduce((s, r) => s + r.area_km2, 0);
+      const escolasMun = rows.reduce((s, r) => s + r.escolas_mun, 0);
+      const escolasTotal = rows.reduce((s, r) => s + r.escolas_total, 0);
+      const pracas = rows.reduce((s, r) => s + r.pracas_parques, 0);
+
+      const scores = {};
+      SERVICE_ROWS.forEach(([k, label]) => {
+        scores[k] = {
+          label,
+          cob: round1(weightedMean(rows, "cob_" + k, "pop_censo2022")),
+          qual: round1(weightedMean(rows, "qual_" + k, "pop_censo2022")),
+          pri: round1(weightedMean(rows, "pri_" + k, "pop_censo2022")),
+        };
+      });
+
+      const best = SERVICE_ROWS.reduce(
+        (a, b) => (scores[b[0]].pri > scores[a[0]].pri ? b : a),
+        SERVICE_ROWS[0]
+      )[0];
+      const priGeral = round1(weightedMean(rows, "pri_geral", "pop_censo2022"));
+
+      const out = {
+        nome: "JOÃO PESSOA",
+        isCity: true,
+        pop_censo2022: pop,
+        area_km2: round1(area),
+        densidade: round1(pop / area),
+        escolas_mun: escolasMun,
+        escolas_total: escolasTotal,
+        pracas_parques: pracas,
+        bairros: rows.length,
+        pri_geral: priGeral,
+        servico_prio: scores[best].label,
+      };
+      SERVICE_ROWS.forEach(([k]) => {
+        out["cob_" + k] = scores[k].cob;
+        out["qual_" + k] = scores[k].qual;
+        out["pri_" + k] = scores[k].pri;
+      });
+      return out;
+    }
+
+    const CITY = buildCityAggregate();
+
+    function fillPanel(props) {
+      const isCity = !!props.isCity;
+      document.getElementById("sel-name").textContent = isCity
+        ? "João Pessoa"
+        : titleCase(props.nome);
+
+      const badge = document.getElementById("sel-badge");
+      badge.hidden = false;
+      badge.textContent = isCity ? "Visão da cidade" : props.servico_prio;
+      badge.classList.toggle("city", isCity);
+
+      document.getElementById("clear-sel").classList.toggle("visible", !isCity);
+
+      document.getElementById("sel-hint").textContent = isCity
+        ? "Agregado dos " + props.bairros +
+          " bairros (médias ponderadas pela população). Serviço com maior prioridade na cidade: " +
+          props.servico_prio + "."
+        : "Serviço prioritário: " + props.servico_prio +
+          ". Prioridade geral " + props.pri_geral +
+          " — investir no gap do serviço, não só no bairro.";
+
+      SERVICE_ROWS.forEach(([k, label]) => {
+        document.getElementById("row-" + k).innerHTML = matrixCell(
+          label, props["cob_" + k], props["qual_" + k], props["pri_" + k]
+        );
+      });
+
+      document.getElementById("m-pop").textContent = fmt(props.pop_censo2022) + " hab.";
+      document.getElementById("m-dens").textContent =
+        fmt(Math.round(props.densidade)) + " hab/km²";
+      document.getElementById("m-esc").textContent =
+        props.escolas_mun + " (públ. " + props.escolas_total + ")";
+      document.getElementById("m-lazer").textContent = props.pracas_parques;
+    }
+
+    function refreshMapSelection() {
+      if (!geoLayer) return;
+      geoLayer.eachLayer((layer) => {
+        const active = selectedNome && layer.feature.properties.nome === selectedNome;
+        layer.setStyle({
+          weight: active ? 2.6 : 0.8,
+          color: active ? "#0b1f2a" : "rgba(11,31,42,0.35)",
+          fillOpacity: active ? 0.82 : 0.68,
+        });
+        if (active) layer.bringToFront();
+      });
+    }
+
+    function showCity() {
+      selectedNome = null;
+      fillPanel(CITY);
+      renderRank();
+      refreshMapSelection();
+      if (geoLayer) map.fitBounds(geoLayer.getBounds(), { padding: [20, 20] });
+    }
+
+    function showFeature(props) {
+      if (selectedNome === props.nome) {
+        showCity();
+        return;
+      }
+      selectedNome = props.nome;
+      fillPanel(props);
+      renderRank();
+      refreshMapSelection();
+    }
+
+    function style(feature) {
+      const v = feature.properties[activeLayer];
+      const active = feature.properties.nome === selectedNome;
+      return {
+        fillColor: colorScale(v),
+        weight: active ? 2.6 : 0.8,
+        color: active ? "#0b1f2a" : "rgba(11,31,42,0.35)",
+        fillOpacity: active ? 0.82 : 0.68,
+      };
+    }
+
+    function onEach(feature, layer) {
+      const p = feature.properties;
+      layer.bindTooltip(titleCase(p.nome), {
+        sticky: true,
+        className: "bairro-tip",
+        direction: "top",
+      });
+      layer.on({
+        click: () => showFeature(p),
+        mouseover: (e) => {
+          if (p.nome !== selectedNome) {
+            e.target.setStyle({ weight: 1.8, color: "#0b1f2a", fillOpacity: 0.8 });
+          }
+        },
+        mouseout: (e) => {
+          geoLayer.resetStyle(e.target);
+          refreshMapSelection();
+        },
+      });
+    }
+
+    function drawLayer() {
+      if (geoLayer) map.removeLayer(geoLayer);
+      geoLayer = L.geoJSON(window.BAIRROS_MATRIZ, { style, onEachFeature: onEach }).addTo(map);
+      map.fitBounds(geoLayer.getBounds(), { padding: [20, 20] });
+      renderLegend();
+      renderRank();
+      refreshMapSelection();
+    }
+
+    function renderLegend() {
+      let el = document.querySelector(".legend");
+      if (!el) {
+        el = document.createElement("div");
+        el.className = "legend";
+        document.getElementById("map").appendChild(el);
+      }
+      const stops = [
+        [15, "Baixa"],
+        [35, "Moderada"],
+        [50, "Atenção"],
+        [65, "Alta"],
+        [80, "Crítica"],
+      ];
+      el.innerHTML =
+        "<strong>" + LAYERS[activeLayer].label + "</strong>" +
+        stops
+          .map(
+            ([v, label]) =>
+              `<div class="legend-item"><span class="swatch" style="background:${colorScale(v)}"></span><span>${label}</span></div>`
+          )
+          .join("");
+    }
+
+    function renderRank() {
+      const list = document.getElementById("rank-list");
+      const rows = window.BAIRROS_MATRIZ.features
+        .map((f) => f.properties)
+        .sort((a, b) => b[activeLayer] - a[activeLayer])
+        .slice(0, 12);
+
+      list.innerHTML = rows
+        .map((p, i) => {
+          const sub =
+            activeLayer === "pri_geral"
+              ? p.servico_prio + " · " + fmt(p.pop_censo2022) + " hab."
+              : "cob. " + p[activeLayer.replace("pri_", "cob_")] +
+                " · qual. " + p[activeLayer.replace("pri_", "qual_")];
+          return `<li>
+            <button type="button" data-nome="${p.nome}" class="${p.nome === selectedNome ? "active" : ""}">
+              <span class="n">${i + 1}</span>
+              <span><span class="name">${titleCase(p.nome)}</span><span class="sub">${sub}</span></span>
+              <span class="score">${p[activeLayer]}</span>
+            </button>
+          </li>`;
+        })
+        .join("");
+
+      list.querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const feat = window.BAIRROS_MATRIZ.features.find(
+            (f) => f.properties.nome === btn.dataset.nome
+          );
+          if (feat) {
+            showFeature(feat.properties);
+            if (selectedNome) {
+              const layer = Object.values(geoLayer._layers).find(
+                (l) => l.feature.properties.nome === feat.properties.nome
+              );
+              if (layer) map.panTo(layer.getBounds().getCenter());
+            }
+          }
+        });
+      });
+    }
+
+    document.getElementById("clear-sel").addEventListener("click", showCity);
+
+    document.querySelectorAll(".chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".chip").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        activeLayer = btn.dataset.layer;
+        drawLayer();
+        if (selectedNome) {
+          const feat = window.BAIRROS_MATRIZ.features.find(
+            (f) => f.properties.nome === selectedNome
+          );
+          if (feat) fillPanel(feat.properties);
+        } else {
+          fillPanel(CITY);
+        }
+      });
+    });
+
+    drawLayer();
+    showCity();
+  </script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+{
+  "ERNESTO GEISEL": {
+    "total": 7,
+    "municipal": 5,
+    "estadual": 2,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "MUÇUMAGRO": {
+    "total": 2,
+    "municipal": 0,
+    "estadual": 2,
+    "federal": 0,
+    "infantil_hint": 0
+  },
+  "VARJÃO": {
+    "total": 5,
+    "municipal": 4,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "OITIZEIRO": {
+    "total": 19,
+    "municipal": 14,
+    "estadual": 5,
+    "federal": 0,
+    "infantil_hint": 4
+  },
+  "VALENTINA": {
+    "total": 10,
+    "municipal": 4,
+    "estadual": 6,
+    "federal": 0,
+    "infantil_hint": 3
+  },
+  "CRISTO REDENTOR": {
+    "total": 18,
+    "municipal": 13,
+    "estadual": 5,
+    "federal": 0,
+    "infantil_hint": 4
+  },
+  "JAGUARIBE": {
+    "total": 10,
+    "municipal": 3,
+    "estadual": 6,
+    "federal": 1,
+    "infantil_hint": 1
+  },
+  "MANAÍRA": {
+    "total": 4,
+    "municipal": 3,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "CRUZ DAS ARMAS": {
+    "total": 10,
+    "municipal": 6,
+    "estadual": 4,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "ERNANI SATIRO": {
+    "total": 5,
+    "municipal": 4,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "MANGABEIRA": {
+    "total": 31,
+    "municipal": 17,
+    "estadual": 13,
+    "federal": 1,
+    "infantil_hint": 10
+  },
+  "BAIRRO DOS IPÊS": {
+    "total": 6,
+    "municipal": 4,
+    "estadual": 2,
+    "federal": 0,
+    "infantil_hint": 3
+  },
+  "TORRE": {
+    "total": 8,
+    "municipal": 4,
+    "estadual": 4,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "ALTO DO MATEUS": {
+    "total": 8,
+    "municipal": 5,
+    "estadual": 3,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "ILHA DO BISPO": {
+    "total": 4,
+    "municipal": 3,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "JARDIM VENEZA": {
+    "total": 6,
+    "municipal": 6,
+    "estadual": 0,
+    "federal": 0,
+    "infantil_hint": 3
+  },
+  "ANATÓLIA": {
+    "total": 1,
+    "municipal": 0,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 0
+  },
+  "COSTA E SILVA": {
+    "total": 7,
+    "municipal": 4,
+    "estadual": 3,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "RÓGER": {
+    "total": 5,
+    "municipal": 3,
+    "estadual": 2,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "JOSÉ AMÉRICO": {
+    "total": 6,
+    "municipal": 5,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "CENTRO": {
+    "total": 7,
+    "municipal": 1,
+    "estadual": 6,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "TAMBIÁ": {
+    "total": 4,
+    "municipal": 1,
+    "estadual": 3,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "JOÃO AGRIPINO": {
+    "total": 1,
+    "municipal": 0,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 0
+  },
+  "CASTELO BRANCO": {
+    "total": 7,
+    "municipal": 2,
+    "estadual": 4,
+    "federal": 1,
+    "infantil_hint": 2
+  },
+  "BAIRRO DAS INDUSTRIAS": {
+    "total": 4,
+    "municipal": 3,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "FUNCIONÁRIOS": {
+    "total": 8,
+    "municipal": 5,
+    "estadual": 3,
+    "federal": 0,
+    "infantil_hint": 4
+  },
+  "PADRE ZÉ": {
+    "total": 3,
+    "municipal": 2,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "ALTO DO CÉU": {
+    "total": 4,
+    "municipal": 2,
+    "estadual": 2,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "VARADOURO": {
+    "total": 2,
+    "municipal": 1,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "TREZE DE MAIO": {
+    "total": 3,
+    "municipal": 1,
+    "estadual": 2,
+    "federal": 0,
+    "infantil_hint": 0
+  },
+  "BANCÁRIOS": {
+    "total": 6,
+    "municipal": 5,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 3
+  },
+  "TAMBAUZINHO": {
+    "total": 3,
+    "municipal": 1,
+    "estadual": 2,
+    "federal": 0,
+    "infantil_hint": 0
+  },
+  "MANDACARÚ": {
+    "total": 5,
+    "municipal": 3,
+    "estadual": 2,
+    "federal": 0,
+    "infantil_hint": 0
+  },
+  "MUMBABA": {
+    "total": 6,
+    "municipal": 5,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 3
+  },
+  "ALTIPLANO CABO BRANCO": {
+    "total": 3,
+    "municipal": 2,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "JOÃO PAULO II": {
+    "total": 5,
+    "municipal": 4,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "GRAMAME": {
+    "total": 9,
+    "municipal": 8,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 3
+  },
+  "PARATIBE": {
+    "total": 3,
+    "municipal": 3,
+    "estadual": 0,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "PENHA": {
+    "total": 3,
+    "municipal": 2,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "PLANALTO DA BOA ESPERANÇA": {
+    "total": 2,
+    "municipal": 2,
+    "estadual": 0,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "TRINCHEIRAS": {
+    "total": 6,
+    "municipal": 5,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 3
+  },
+  "JARDIM OCEANIA": {
+    "total": 1,
+    "municipal": 1,
+    "estadual": 0,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "BAIRRO DOS ESTADOS": {
+    "total": 1,
+    "municipal": 1,
+    "estadual": 0,
+    "federal": 0,
+    "infantil_hint": 0
+  },
+  "JARDIM CIDADE UNIVERSITÁRIA": {
+    "total": 3,
+    "municipal": 1,
+    "estadual": 2,
+    "federal": 0,
+    "infantil_hint": 0
+  },
+  "DISTRITO INDUSTRIAL": {
+    "total": 2,
+    "municipal": 1,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 0
+  },
+  "GROTÃO": {
+    "total": 2,
+    "municipal": 2,
+    "estadual": 0,
+    "federal": 0,
+    "infantil_hint": 0
+  },
+  "SÃO JOSÉ": {
+    "total": 2,
+    "municipal": 2,
+    "estadual": 0,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "MIRAMAR": {
+    "total": 1,
+    "municipal": 1,
+    "estadual": 0,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "CUIÁ": {
+    "total": 2,
+    "municipal": 1,
+    "estadual": 1,
+    "federal": 0,
+    "infantil_hint": 1
+  },
+  "COSTA DO SOL": {
+    "total": 3,
+    "municipal": 3,
+    "estadual": 0,
+    "federal": 0,
+    "infantil_hint": 2
+  },
+  "BESSA": {
+    "total": 1,
+    "municipal": 1,
+    "estadual": 0,
+    "federal": 0,
+    "infantil_hint": 1
+  }
+}
