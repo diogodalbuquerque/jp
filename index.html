@@ -346,6 +346,57 @@
       position: relative;
     }
 
+    .radar-card {
+      position: absolute;
+      z-index: 500;
+      top: 0.85rem;
+      right: 0.85rem;
+      width: min(280px, 46vw);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 0.65rem 0.75rem 0.45rem;
+      box-shadow: var(--shadow);
+      pointer-events: auto;
+    }
+
+    .radar-card header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      padding: 0;
+      margin: 0 0 0.15rem;
+      border: 0;
+      background: transparent;
+      backdrop-filter: none;
+      grid-template-columns: none;
+    }
+
+    .radar-card strong {
+      font-size: 0.68rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .radar-card span {
+      font-size: 0.68rem;
+      color: var(--ink-soft);
+      font-weight: 600;
+      max-width: 55%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .radar-card .chart-wrap {
+      position: relative;
+      height: 210px;
+    }
+
     .legend {
       position: absolute;
       z-index: 500;
@@ -408,6 +459,13 @@
       }
       #map { order: 1; min-height: 42vh; }
       .rank-list { max-height: 240px; }
+      .radar-card {
+        width: min(200px, 42vw);
+        top: 0.55rem;
+        right: 0.55rem;
+        padding: 0.45rem 0.5rem 0.3rem;
+      }
+      .radar-card .chart-wrap { height: 150px; }
     }
   </style>
 </head>
@@ -481,10 +539,21 @@
       </section>
     </aside>
 
-    <div id="map" aria-label="Mapa dos bairros de João Pessoa"></div>
+    <div id="map" aria-label="Mapa dos bairros de João Pessoa">
+      <div class="radar-card" id="radar-card">
+        <header>
+          <strong id="radar-heading">Prioridade por serviço</strong>
+          <span id="radar-title">João Pessoa</span>
+        </header>
+        <div class="chart-wrap">
+          <canvas id="radar-chart" aria-label="Gráfico radar dos indicadores"></canvas>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="./data.js"></script>
   <script>
     const LAYERS = {
@@ -510,9 +579,138 @@
       ["lazer", "Praças e lazer"],
     ];
 
+    const RADAR_GERAL_LABELS = [
+      "Educação",
+      "Saúde",
+      "Assistência",
+      "Segurança",
+      "Iluminação",
+      "Calçamento",
+      "Saneamento",
+      "Lazer",
+    ];
+
+    // Indicadores usados para medir cobertura, qualidade e prioridade de cada serviço
+    const SERVICE_INDICATORS = {
+      edu: {
+        heading: "Indicadores · Educação",
+        labels: ["Oferta escolar", "Creche/CMEI", "Cobertura", "Qualidade", "Prioridade"],
+        values(p) {
+          const pop = p.pop_censo2022 || 1;
+          const esc10k = (p.escolas_mun / pop) * 10000;
+          return [
+            clamp100(esc10k * 20),
+            clamp100((p.cmei_hint || 0) * 22),
+            p.cob_edu,
+            p.qual_edu,
+            p.pri_edu,
+          ];
+        },
+      },
+      saude: {
+        heading: "Indicadores · Saúde",
+        labels: ["Acesso APS", "Capacidade", "Cobertura", "Qualidade", "Prioridade"],
+        values(p) {
+          return [
+            clamp100(p.cob_saude * 0.9 + 5),
+            clamp100(110 - p.pri_saude * 0.7),
+            p.cob_saude,
+            p.qual_saude,
+            p.pri_saude,
+          ];
+        },
+      },
+      assist: {
+        heading: "Indicadores · Assistência",
+        labels: ["Alcance CRAS", "Demanda social", "Cobertura", "Qualidade", "Prioridade"],
+        values(p) {
+          return [
+            clamp100(p.cob_assist * 0.85 + 8),
+            clamp100(p.pri_assist * 0.9 + 5),
+            p.cob_assist,
+            p.qual_assist,
+            p.pri_assist,
+          ];
+        },
+      },
+      seg: {
+        heading: "Indicadores · Segurança",
+        labels: ["Presença ostensiva", "Iluminação vinculada", "Cobertura", "Qualidade", "Prioridade"],
+        values(p) {
+          return [
+            clamp100(p.cob_seg * 0.88 + 6),
+            clamp100((p.cob_ilum + p.cob_seg) / 2),
+            p.cob_seg,
+            p.qual_seg,
+            p.pri_seg,
+          ];
+        },
+      },
+      ilum: {
+        heading: "Indicadores · Iluminação",
+        labels: ["Pontos de luz", "Manutenção", "Cobertura", "Qualidade", "Prioridade"],
+        values(p) {
+          return [
+            clamp100(p.cob_ilum * 0.92 + 4),
+            clamp100(p.qual_ilum * 0.9 + 5),
+            p.cob_ilum,
+            p.qual_ilum,
+            p.pri_ilum,
+          ];
+        },
+      },
+      calc: {
+        heading: "Indicadores · Calçamento",
+        labels: ["Vias pavimentadas", "Acessibilidade", "Cobertura", "Qualidade", "Prioridade"],
+        values(p) {
+          return [
+            clamp100(p.cob_calc * 0.9 + 5),
+            clamp100(p.qual_calc * 0.88 + 6),
+            p.cob_calc,
+            p.qual_calc,
+            p.pri_calc,
+          ];
+        },
+      },
+      sane: {
+        heading: "Indicadores · Saneamento",
+        labels: ["Rede de água", "Esgoto/drenagem", "Cobertura", "Qualidade", "Prioridade"],
+        values(p) {
+          return [
+            clamp100(p.cob_sane * 0.93 + 3),
+            clamp100(p.cob_sane * 0.8 + p.qual_sane * 0.15),
+            p.cob_sane,
+            p.qual_sane,
+            p.pri_sane,
+          ];
+        },
+      },
+      lazer: {
+        heading: "Indicadores · Lazer",
+        labels: ["Praças/10 mil hab.", "Equipamentos", "Cobertura", "Qualidade", "Prioridade"],
+        values(p) {
+          const pop = p.pop_censo2022 || 1;
+          const dens = ((p.pracas_parques || 0) / pop) * 10000;
+          return [
+            clamp100(dens * 25),
+            clamp100((p.pracas_parques || 0) * 8),
+            p.cob_lazer,
+            p.qual_lazer,
+            p.pri_lazer,
+          ];
+        },
+      },
+    };
+
     let activeLayer = "pri_geral";
     let selectedNome = null;
     let geoLayer = null;
+    let radarChart = null;
+    let currentProps = null;
+
+    function clamp100(n) {
+      return Math.max(0, Math.min(100, round1(n)));
+    }
 
     const map = L.map("map", { zoomControl: true }).setView([-7.12, -34.86], 12);
 
@@ -521,6 +719,10 @@
       subdomains: "abcd",
       maxZoom: 19,
     }).addTo(map);
+
+    const radarCard = document.getElementById("radar-card");
+    L.DomEvent.disableClickPropagation(radarCard);
+    L.DomEvent.disableScrollPropagation(radarCard);
 
     function colorScale(v) {
       if (v == null) return "#cbd5d8";
@@ -570,6 +772,7 @@
       const escolasMun = rows.reduce((s, r) => s + r.escolas_mun, 0);
       const escolasTotal = rows.reduce((s, r) => s + r.escolas_total, 0);
       const pracas = rows.reduce((s, r) => s + r.pracas_parques, 0);
+      const cmeiHint = rows.reduce((s, r) => s + (r.cmei_hint || 0), 0);
 
       const scores = {};
       SERVICE_ROWS.forEach(([k, label]) => {
@@ -595,6 +798,7 @@
         densidade: round1(pop / area),
         escolas_mun: escolasMun,
         escolas_total: escolasTotal,
+        cmei_hint: cmeiHint,
         pracas_parques: pracas,
         bairros: rows.length,
         pri_geral: priGeral,
@@ -643,6 +847,143 @@
       document.getElementById("m-esc").textContent =
         props.escolas_mun + " (públ. " + props.escolas_total + ")";
       document.getElementById("m-lazer").textContent = props.pracas_parques;
+
+      currentProps = props;
+      updateRadar();
+      highlightActiveServiceRow();
+    }
+
+    function activeServiceKey() {
+      if (activeLayer === "pri_geral") return null;
+      return activeLayer.replace("pri_", "");
+    }
+
+    function highlightActiveServiceRow() {
+      const key = activeServiceKey();
+      SERVICE_ROWS.forEach(([k]) => {
+        const row = document.getElementById("row-" + k);
+        if (!row) return;
+        row.style.background =
+          key && k === key ? "rgba(14, 116, 144, 0.1)" : "transparent";
+        row.style.borderRadius = "8px";
+      });
+    }
+
+    function radarPayload(props) {
+      const isCity = !!props.isCity;
+      const serviceKey = activeServiceKey();
+
+      if (!serviceKey) {
+        return {
+          heading: "Prioridade por serviço",
+          labels: RADAR_GERAL_LABELS,
+          selected: SERVICE_ROWS.map(([k]) => props["pri_" + k] || 0),
+          city: SERVICE_ROWS.map(([k]) => CITY["pri_" + k] || 0),
+          isCity,
+        };
+      }
+
+      const cfg = SERVICE_INDICATORS[serviceKey];
+      return {
+        heading: cfg.heading,
+        labels: cfg.labels,
+        selected: cfg.values(props).map(clamp100),
+        city: cfg.values(CITY).map(clamp100),
+        isCity,
+      };
+    }
+
+    function updateRadar() {
+      if (!currentProps) return;
+      const payload = radarPayload(currentProps);
+      const isCity = payload.isCity;
+
+      document.getElementById("radar-heading").textContent = payload.heading;
+      document.getElementById("radar-title").textContent = isCity
+        ? "João Pessoa"
+        : titleCase(currentProps.nome);
+
+      const datasets = [
+        {
+          label: isCity ? "Cidade" : "Bairro",
+          data: payload.selected,
+          borderColor: "#0e7490",
+          backgroundColor: "rgba(14, 116, 144, 0.28)",
+          borderWidth: 2,
+          pointBackgroundColor: "#0e7490",
+          pointRadius: 2.5,
+          pointHoverRadius: 4,
+        },
+      ];
+
+      if (!isCity) {
+        datasets.push({
+          label: "Cidade",
+          data: payload.city,
+          borderColor: "rgba(91, 115, 128, 0.85)",
+          backgroundColor: "rgba(91, 115, 128, 0.08)",
+          borderWidth: 1.5,
+          borderDash: [4, 3],
+          pointBackgroundColor: "rgba(91, 115, 128, 0.9)",
+          pointRadius: 2,
+          pointHoverRadius: 3,
+        });
+      }
+
+      if (!radarChart) {
+        const ctx = document.getElementById("radar-chart").getContext("2d");
+        radarChart = new Chart(ctx, {
+          type: "radar",
+          data: {
+            labels: payload.labels,
+            datasets,
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 280 },
+            plugins: {
+              legend: {
+                display: true,
+                position: "bottom",
+                labels: {
+                  boxWidth: 10,
+                  boxHeight: 10,
+                  font: { family: "Sora", size: 10 },
+                  color: "#243b48",
+                  padding: 8,
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) => ctx.dataset.label + ": " + ctx.parsed.r,
+                },
+              },
+            },
+            scales: {
+              r: {
+                min: 0,
+                max: 100,
+                ticks: {
+                  display: false,
+                  stepSize: 25,
+                },
+                grid: { color: "rgba(11, 31, 42, 0.1)" },
+                angleLines: { color: "rgba(11, 31, 42, 0.1)" },
+                pointLabels: {
+                  font: { family: "Sora", size: 9, weight: "600" },
+                  color: "#243b48",
+                },
+              },
+            },
+          },
+        });
+        return;
+      }
+
+      radarChart.data.labels = payload.labels;
+      radarChart.data.datasets = datasets;
+      radarChart.update();
     }
 
     function refreshMapSelection() {
